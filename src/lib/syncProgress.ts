@@ -38,6 +38,17 @@ export async function pullProgress(): Promise<void> {
     const res = await fetch('/api/progress')
     if (!res.ok) return
     const { data } = await res.json()
-    if (data && typeof data === 'object') applyRemoteProgress(data)
+
+    const dbHasData = data && typeof data === 'object' && Object.keys(data).length > 0
+    const localHasData = SYNC_KEYS.some(k => {
+      try { return !!localStorage.getItem(k) } catch { return false }
+    })
+
+    if (dbHasData) {
+      applyRemoteProgress(data as Record<string, unknown>)
+    } else if (localHasData) {
+      // DB пустая, но есть локальные данные — первичный push
+      await pushProgress()
+    }
   } catch {}
 }

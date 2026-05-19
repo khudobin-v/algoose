@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { getSettings, saveSettings, type AppSettings, type EditorFont, type EditorTheme } from '@/lib/settings'
 import { resetAllProgress } from '@/lib/activity'
 import { useNavbarSlot } from '@/components/NavbarSlot'
+import { pushProgress, pullProgress } from '@/lib/syncProgress'
 
 const FONTS: { key: EditorFont; sample: string }[] = [
   { key: 'JetBrains Mono', sample: 'int n = arr.length;' },
@@ -49,6 +50,7 @@ export default function SettingsPage() {
   const [balance, setBalance] = useState<BalanceData | null>(null)
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
+  const [syncState, setSyncState] = useState<'idle' | 'pushing' | 'pulling' | 'done'>('idle')
 
   const { setSlot, clearSlot } = useNavbarSlot()
 
@@ -242,6 +244,46 @@ export default function SettingsPage() {
               </button>
             )
           })}
+        </div>
+      </Section>
+
+      {/* ── Sync ── */}
+      <Section title="Синхронизация прогресса">
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            disabled={syncState !== 'idle'}
+            onClick={async () => {
+              setSyncState('pushing')
+              await pushProgress()
+              setSyncState('done')
+              setTimeout(() => setSyncState('idle'), 2000)
+            }}
+            style={{
+              padding: '8px 18px', borderRadius: 10, cursor: syncState !== 'idle' ? 'default' : 'pointer',
+              fontSize: '0.82rem', fontWeight: 700, opacity: syncState !== 'idle' ? 0.5 : 1,
+              background: 'transparent', border: '1px solid var(--border)', color: 'var(--text2)',
+              transition: 'all 0.15s',
+            }}
+          >
+            {syncState === 'pushing' ? 'Сохраняю...' : syncState === 'done' ? 'Сохранено ✓' : '↑ Сохранить локальное в БД'}
+          </button>
+          <button
+            disabled={syncState !== 'idle'}
+            onClick={async () => {
+              setSyncState('pulling')
+              await pullProgress()
+              setSyncState('done')
+              setTimeout(() => setSyncState('idle'), 2000)
+            }}
+            style={{
+              padding: '8px 18px', borderRadius: 10, cursor: syncState !== 'idle' ? 'default' : 'pointer',
+              fontSize: '0.82rem', fontWeight: 700, opacity: syncState !== 'idle' ? 0.5 : 1,
+              background: 'transparent', border: '1px solid var(--border)', color: 'var(--text2)',
+              transition: 'all 0.15s',
+            }}
+          >
+            {syncState === 'pulling' ? 'Загружаю...' : syncState === 'done' ? 'Готово ✓' : '↓ Загрузить из БД'}
+          </button>
         </div>
       </Section>
 
