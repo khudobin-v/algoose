@@ -141,7 +141,23 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
         >
           {side === 'front' ? (
             <div className="markdown">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{task.description}</ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  pre: ({ children }) => (
+                    <div style={{
+                      fontSize: '0.875rem', lineHeight: 1.65, color: 'var(--text2)',
+                      whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: '0.6rem 0',
+                    }}>
+                      {children}
+                    </div>
+                  ),
+                  code: ({ className, children }) =>
+                    className
+                      ? <code className={className}>{children}</code>
+                      : <span style={{ fontFamily: 'inherit' }}>{children}</span>,
+                }}
+              >{task.description}</ReactMarkdown>
             </div>
           ) : (
             <div>
