@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-const BASE_DIR = path.resolve(process.cwd(), '..')
+const BASE_DIR = path.join(process.cwd(), 'content')
 
 export const PRIORITY: Record<number, 'red' | 'orange' | 'yellow'> = {}
 for (let n = 1; n <= 13; n++) PRIORITY[n] = 'red'
