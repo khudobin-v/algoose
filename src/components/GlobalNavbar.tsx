@@ -1,7 +1,8 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ArrowLeft, BarChart2, Settings } from 'lucide-react'
+import { ArrowLeft, BarChart2, Settings, LogOut } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
 import AlgooseLogo from './AlgooseLogo'
 import ThemeToggle from './ThemeToggle'
 import { NavbarSlotRenderer } from './NavbarSlot'
@@ -16,7 +17,9 @@ function getBackPath(path: string): string | null {
 
 export default function GlobalNavbar() {
   const path = usePathname()
+  const { data: session } = useSession()
   const isHome = path === '/'
+  const isLogin = path === '/login'
   const backPath = getBackPath(path)
 
   return (
@@ -57,21 +60,35 @@ export default function GlobalNavbar() {
 
       <ThemeToggle />
 
-      <Link href="/settings" style={{
-        display: 'flex', alignItems: 'center',
-        color: 'var(--muted)', padding: '6px',
-        borderRadius: 8, transition: 'color 0.15s',
-      }}>
-        <Settings size={16} />
-      </Link>
+      {!isLogin && session && (<>
+        <Link href="/settings" style={{
+          display: 'flex', alignItems: 'center',
+          color: path === '/settings' ? 'var(--accent)' : 'var(--muted)',
+          padding: '6px', borderRadius: 8, transition: 'color 0.15s',
+        }}>
+          <Settings size={16} />
+        </Link>
 
-      <Link href="/stats" style={{
-        display: 'flex', alignItems: 'center',
-        color: path === '/stats' ? 'var(--accent)' : 'var(--muted)',
-        padding: '6px', borderRadius: 8, transition: 'color 0.15s',
-      }}>
-        <BarChart2 size={16} />
-      </Link>
+        <Link href="/stats" style={{
+          display: 'flex', alignItems: 'center',
+          color: path === '/stats' ? 'var(--accent)' : 'var(--muted)',
+          padding: '6px', borderRadius: 8, transition: 'color 0.15s',
+        }}>
+          <BarChart2 size={16} />
+        </Link>
+
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          title="Выйти"
+          style={{
+            display: 'flex', alignItems: 'center', background: 'none', border: 'none',
+            color: 'var(--muted)', padding: '6px', borderRadius: 8,
+            cursor: 'pointer', transition: 'color 0.15s',
+          }}
+        >
+          <LogOut size={16} />
+        </button>
+      </>)}
     </nav>
   )
 }

@@ -32,12 +32,14 @@ export default function LoginPage() {
     }
   }
 
-  if (status === 'loading' || session) return null
+  if (status === 'loading' || session) return (
+    <div style={{ minHeight: '100dvh', background: 'var(--bg)' }} />
+  )
 
   return (
     <div style={{
       minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--bg)',
+      background: 'var(--bg)', paddingTop: 0,
     }}>
       <form onSubmit={handleSubmit} style={{
         width: 340, padding: '36px 32px', borderRadius: 16,
