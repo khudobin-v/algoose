@@ -1,0 +1,321 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Fira+Code:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Source+Code+Pro:wght@400;500&display=swap');
+@import "tailwindcss";
+
+/* ── Fonts ───────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'TT Hoves Pro';
+  src: url('/fonts/TTHovesPro-Regular.ttf') format('truetype');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'TT Hoves Pro';
+  src: url('/fonts/TTHovesPro-Medium.ttf') format('truetype');
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'TT Hoves Pro';
+  src: url('/fonts/TTHovesPro-DemiBold.ttf') format('truetype');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'TT Hoves Pro';
+  src: url('/fonts/TTHovesPro-Bold.ttf') format('truetype');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+/* ── Dark theme (default) ────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+  --navbar-h: 52px;
+  --navbar-bg: rgba(10, 10, 10, 0.82);
+
+  --bg:       #0a0a0a;
+  --bg2:      #0f0f0f;
+  --surface:  #111111;
+  --surface2: #171717;
+  --surface3: #1e1e1e;
+  --border:   #242424;
+  --border2:  #2e2e2e;
+
+  --text:  #f0f0f0;
+  --text2: #b0b0b0;
+  --muted: #5a5a5a;
+
+  --accent:      #FF9900;
+  --accent-dim:  #cc7a00;
+  --accent-glow: #FF990018;
+  --accent-text: #000000;
+
+  --green:  #48b870;
+  --red:    #e05555;
+  --yellow: #c8a820;
+}
+
+/* ── Light theme ─────────────────────────────────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+  --navbar-bg: rgba(250, 250, 250, 0.88);
+
+  --bg:       #fafafa;
+  --bg2:      #f4f4f5;
+  --surface:  #ffffff;
+  --surface2: #f4f4f5;
+  --surface3: #eaeaec;
+  --border:   #e4e4e7;
+  --border2:  #d4d4d8;
+
+  --text:  #09090b;
+  --text2: #3f3f46;
+  --muted: #71717a;
+
+  --accent:      #FF9900;
+  --accent-dim:  #e68900;
+  --accent-glow: #FF990014;
+  --accent-text: #000000;
+
+  --green:  #16a34a;
+  --red:    #dc2626;
+  --yellow: #b45309;
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  padding-top: var(--navbar-h);
+  font-family: 'TT Hoves Pro', var(--font-sans, 'Inter'), -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+pre, code, textarea, .mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+}
+
+/* ── Interactive ─────────────────────────────────────────────── */
+.task-row { transition: background 0.1s; }
+.task-row:hover { background: var(--surface2); }
+
+.btn-accent {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--accent); color: var(--accent-text);
+  border: none; border-radius: 10px;
+  font-weight: 700; cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.btn-accent:hover { background: var(--accent-dim); }
+.btn-accent:disabled { opacity: 0.35; cursor: default; }
+
+/* ── Practice layout ─────────────────────────────────────────── */
+.practice-root {
+  /* Occupy exactly the viewport below the navbar — no page scroll */
+  height: calc(100dvh - var(--navbar-h));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.practice-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Mobile: editor first, panels stack */
+.practice-col-left   { order: 2; overflow-y: auto; }
+.practice-col-editor { order: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.practice-col-editor > :first-child { flex: 1; min-height: 0; }
+
+@media (min-width: 1024px) {
+  .practice-body {
+    display: grid;
+    /* columns overridden by inline style when dragging */
+    grid-template-columns: 33% 5px 1fr;
+    grid-template-areas: "left handle editor";
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .practice-col-left {
+    grid-area: left;
+    order: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+    min-width: 0;
+  }
+
+  .practice-resize-handle {
+    grid-area: handle;
+    cursor: col-resize;
+    background: var(--border);
+    position: relative;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .practice-resize-handle:hover { background: var(--accent); }
+  .practice-resize-handle.dragging { background: var(--accent); }
+
+  .practice-col-editor {
+    grid-area: editor;
+    order: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .practice-col-editor > :first-child { flex: 1; min-height: 0; }
+}
+
+/* Left panel: two scrollable sub-panels */
+.practice-panel {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.practice-panel + .practice-panel {
+  border-top: 1px solid var(--border);
+}
+
+.practice-panel-header {
+  padding: 10px 18px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.practice-panel-body {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px;
+  /* Prevent any child from expanding the panel width */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Fix markdown horizontal overflow */
+.markdown { overflow-x: hidden; min-width: 0; }
+.markdown * { max-width: 100%; box-sizing: border-box; }
+.markdown pre { overflow-x: auto; }
+.markdown code { word-break: break-word; }
+.markdown p, .markdown li, .markdown h1, .markdown h2, .markdown h3 { word-break: break-word; }
+
+/* ── Priority tags ───────────────────────────────────────────── */
+.priority-tag {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 5px;
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  line-height: 1; white-space: nowrap; box-sizing: border-box;
+}
+.priority-tag.red    { background: #ff444418; border: 1px solid #ff444444; color: #ff7777; }
+.priority-tag.orange { background: #ff880018; border: 1px solid #ff880044; color: #ffaa44; }
+.priority-tag.yellow { background: #ccaa0018; border: 1px solid #ccaa0044; color: #ddcc44; }
+
+[data-theme="light"] .priority-tag.red    { background: #ff44440f; border-color: #ff444433; color: #cc2222; }
+[data-theme="light"] .priority-tag.orange { background: #ff88000f; border-color: #ff880033; color: #cc6600; }
+[data-theme="light"] .priority-tag.yellow { background: #ccaa000f; border-color: #ccaa0033; color: #997700; }
+
+/* ── Markdown ────────────────────────────────────────────────── */
+.markdown h1 {
+  font-size: 1rem; font-weight: 700; margin: 1.3rem 0 0.6rem; color: var(--text);
+}
+.markdown h2 {
+  font-size: 0.92rem; font-weight: 700; margin: 1.2rem 0 0.5rem;
+  color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 4px;
+}
+.markdown h3 {
+  font-size: 0.875rem; font-weight: 600; margin: 1rem 0 0.4rem;
+  color: var(--text); letter-spacing: 0.01em;
+}
+.markdown h1:first-child,
+.markdown h2:first-child,
+.markdown h3:first-child { margin-top: 0; }
+.markdown p { margin: 0.45rem 0; line-height: 1.65; font-size: 0.875rem; color: var(--text2); }
+.markdown ul, .markdown ol { margin: 0.4rem 0 0.4rem 1.3rem; }
+.markdown li { margin: 0.25rem 0; font-size: 0.875rem; line-height: 1.55; color: var(--text2); }
+.markdown code {
+  background: var(--surface3); padding: 1px 6px; border-radius: 4px;
+  font-size: 0.78rem; color: var(--text); border: 1px solid var(--border2);
+}
+.markdown pre {
+  background: var(--surface2); padding: 1rem; border-radius: 10px;
+  overflow-x: auto; margin: 0.7rem 0; border: 1px solid var(--border);
+}
+.markdown pre code { background: none; padding: 0; border: none; color: var(--text2); font-size: 0.8rem; }
+.markdown blockquote {
+  border-left: 2px solid var(--border2); padding-left: 0.9rem;
+  color: var(--muted); margin: 0.6rem 0; font-style: italic;
+}
+.markdown strong { color: var(--text); font-weight: 600; }
+.markdown em { color: var(--text2); font-style: italic; }
+.markdown hr { border: none; border-top: 1px solid var(--border); margin: 0.9rem 0; }
+.markdown a { color: var(--accent); text-decoration: none; }
+.markdown a:hover { text-decoration: underline; }
+
+/* ── Animations ──────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes hint-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes gooseBounce {
+  0%   { transform: scale(0) rotate(-15deg); }
+  60%  { transform: scale(1.15) rotate(5deg); }
+  80%  { transform: scale(0.95) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40%            { opacity: 1;   transform: scale(1);   }
+}
+
+@keyframes gooseWalkAnim {
+  0%   { left:   0px; transform: scaleX(1)  translateY(0); }
+  10%  { left:  16px; transform: scaleX(1)  translateY(-5px); }
+  22%  { left:  40px; transform: scaleX(1)  translateY(0); }
+  32%  { left:  64px; transform: scaleX(1)  translateY(-5px); }
+  44%  { left:  90px; transform: scaleX(1)  translateY(0); }
+  50%  { left: 120px; transform: scaleX(-1) translateY(0); }
+  60%  { left: 104px; transform: scaleX(-1) translateY(-5px); }
+  72%  { left:  80px; transform: scaleX(-1) translateY(0); }
+  82%  { left:  56px; transform: scaleX(-1) translateY(-5px); }
+  94%  { left:  16px; transform: scaleX(-1) translateY(0); }
+  100% { left:   0px; transform: scaleX(1)  translateY(0); }
+}
+
+.markdown table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 0.7rem 0; }
+.markdown th {
+  background: var(--surface3); color: var(--text); font-weight: 600;
+  padding: 6px 10px; border: 1px solid var(--border); text-align: left;
+}
+.markdown td { padding: 5px 10px; border: 1px solid var(--border); color: var(--text2); }
+.markdown tr:nth-child(even) td { background: var(--surface2); }
