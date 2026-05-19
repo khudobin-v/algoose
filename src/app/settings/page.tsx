@@ -51,6 +51,10 @@ export default function SettingsPage() {
   const [balanceLoading, setBalanceLoading] = useState(false)
   const [balanceError, setBalanceError] = useState<string | null>(null)
   const [syncState, setSyncState] = useState<'idle' | 'pushing' | 'pulling' | 'done'>('idle')
+  const [exportJson, setExportJson] = useState<string | null>(null)
+  const [importText, setImportText] = useState('')
+  const [importError, setImportError] = useState('')
+  const [importDone, setImportDone] = useState(false)
 
   const { setSlot, clearSlot } = useNavbarSlot()
 
@@ -244,6 +248,106 @@ export default function SettingsPage() {
               </button>
             )
           })}
+        </div>
+      </Section>
+
+      {/* ── Import / Export ── */}
+      <Section title="Перенос данных" description="Чтобы перенести прогресс с другого устройства — экспортируй там JSON и вставь сюда.">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Export */}
+          <button
+            onClick={() => {
+              const keys = ['algoprep_progress', 'algoprep_activity']
+              const data: Record<string, unknown> = {}
+              for (const k of keys) {
+                try { const v = localStorage.getItem(k); if (v) data[k] = JSON.parse(v) } catch {}
+              }
+              setExportJson(JSON.stringify(data, null, 2))
+            }}
+            style={{
+              padding: '8px 18px', borderRadius: 10, cursor: 'pointer', alignSelf: 'flex-start',
+              fontSize: '0.82rem', fontWeight: 700,
+              background: 'transparent', border: '1px solid var(--border)', color: 'var(--text2)',
+            }}
+          >
+            Экспорт → скопировать JSON
+          </button>
+
+          {exportJson !== null && (
+            <div style={{ position: 'relative' }}>
+              <textarea
+                readOnly
+                value={exportJson}
+                rows={5}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 9,
+                  border: '1px solid var(--border)', background: 'var(--surface2)',
+                  color: 'var(--text2)', fontFamily: 'monospace', fontSize: '0.72rem',
+                  resize: 'vertical', outline: 'none', boxSizing: 'border-box',
+                }}
+                onFocus={e => e.target.select()}
+              />
+              <button
+                onClick={() => { navigator.clipboard.writeText(exportJson); setExportJson(null) }}
+                style={{
+                  position: 'absolute', top: 8, right: 8,
+                  padding: '3px 10px', borderRadius: 6, cursor: 'pointer',
+                  fontSize: '0.72rem', fontWeight: 700,
+                  background: 'var(--accent)', color: '#000', border: 'none',
+                }}
+              >
+                Копировать
+              </button>
+            </div>
+          )}
+
+          {/* Import */}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+            <textarea
+              value={importText}
+              onChange={e => { setImportText(e.target.value); setImportError(''); setImportDone(false) }}
+              placeholder='Вставь сюда JSON с другого устройства...'
+              rows={4}
+              style={{
+                width: '100%', padding: '10px 12px', borderRadius: 9,
+                border: `1px solid ${importError ? 'var(--red)' : 'var(--border)'}`,
+                background: 'var(--surface2)', color: 'var(--text)',
+                fontFamily: 'monospace', fontSize: '0.72rem',
+                resize: 'vertical', outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            {importError && <div style={{ fontSize: '0.75rem', color: 'var(--red)', marginTop: 4 }}>{importError}</div>}
+            {importDone && <div style={{ fontSize: '0.75rem', color: 'var(--green)', marginTop: 4 }}>Импортировано и сохранено в БД ✓</div>}
+            <button
+              disabled={!importText.trim()}
+              onClick={async () => {
+                try {
+                  const parsed = JSON.parse(importText.trim())
+                  const keys = ['algoprep_progress', 'algoprep_activity']
+                  for (const k of keys) {
+                    if (parsed[k] !== undefined) {
+                      localStorage.setItem(k, JSON.stringify(parsed[k]))
+                    }
+                  }
+                  // Immediately push to DB
+                  await pushProgress()
+                  setImportText('')
+                  setImportDone(true)
+                  setImportError('')
+                } catch {
+                  setImportError('Невалидный JSON — проверь что скопировал полностью')
+                }
+              }}
+              style={{
+                marginTop: 8, padding: '8px 18px', borderRadius: 10,
+                cursor: importText.trim() ? 'pointer' : 'default',
+                fontSize: '0.82rem', fontWeight: 700, opacity: importText.trim() ? 1 : 0.4,
+                background: 'var(--accent)', color: '#000', border: 'none',
+              }}
+            >
+              Импортировать и сохранить
+            </button>
+          </div>
         </div>
       </Section>
 
