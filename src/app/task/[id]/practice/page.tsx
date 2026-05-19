@@ -18,6 +18,7 @@ import { getSettings, type AppSettings } from '@/lib/settings'
 import { useNavbarSlot } from '@/components/NavbarSlot'
 import { pushProgress } from '@/lib/syncProgress'
 import CopyButton from '@/components/CopyButton'
+import InlineAskModal from '@/components/InlineAskModal'
 
 interface TaskDetail {
   id: number
@@ -129,6 +130,9 @@ export default function PracticePage({ params }: { params: Promise<{ id: string 
   const [hintLoading, setHintLoading] = useState(false)
   const [hintStreaming, setHintStreaming] = useState(false)
   const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Inline Ask (Cmd+I)
+  const [inlineAskAnchor, setInlineAskAnchor] = useState<{ x: number; y: number; cursorLine: string } | null>(null)
 
   // Post-solve
   const [selfSolve, setSelfSolve] = useState<'yes' | 'no' | null>(null)
@@ -365,6 +369,45 @@ export default function PracticePage({ params }: { params: Promise<{ id: string 
     } catch {
       setHintLoading(false)
       setHint('Не удалось получить подсказку.')
+    } finally {
+      setHintStreaming(false)
+    }
+  }, [task, code, hintLoading, hintStreaming])
+
+  // ── Inline Ask ────────────────────────────────────────────────
+  const submitInlineAsk = useCallback(async (question: string, cursorLine: string) => {
+    if (!task || hintLoading || hintStreaming) return
+    setInlineAskAnchor(null)
+    setHint('')
+    setHintLoading(true)
+    setActivePanel('ai')
+    try {
+      const res = await fetch('/api/inline-ask', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ taskName: task.name, code, cursorLine, question }),
+      })
+      setHintLoading(false)
+      setHintStreaming(true)
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      outer: while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const payload = line.slice(6)
+          if (payload === '[DONE]') break outer
+          try { setHint(prev => (prev ?? '') + JSON.parse(payload)) } catch {}
+        }
+      }
+    } catch {
+      setHintLoading(false)
+      setHint('Не удалось получить ответ.')
     } finally {
       setHintStreaming(false)
     }
@@ -787,8 +830,17 @@ export default function PracticePage({ params }: { params: Promise<{ id: string 
               onChange={handleCodeChange}
               onSubmit={submit}
               onHint={fetchHint}
+              onInlineAsk={(coords, cursorLine) => setInlineAskAnchor({ ...coords, cursorLine })}
               minHeight="100%"
             />
+            {inlineAskAnchor && (
+              <InlineAskModal
+                x={inlineAskAnchor.x}
+                y={inlineAskAnchor.y}
+                onClose={() => setInlineAskAnchor(null)}
+                onSubmit={q => submitInlineAsk(q, inlineAskAnchor.cursorLine)}
+              />
+            )}
 
             {/* Ghost overlay */}
             {showGhost && ghostCode && (

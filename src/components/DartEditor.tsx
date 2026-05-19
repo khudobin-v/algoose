@@ -206,12 +206,13 @@ interface Props {
   onChange: (v: string) => void
   onSubmit?: () => void
   onHint?: () => void
+  onInlineAsk?: (coords: { x: number; y: number }, cursorLine: string) => void
   minHeight?: number | string
   editorFont?: EditorFont
   editorTheme?: EditorTheme
 }
 
-export default function DartEditor({ value, onChange, onSubmit, onHint, minHeight = 280, editorFont, editorTheme }: Props) {
+export default function DartEditor({ value, onChange, onSubmit, onHint, onInlineAsk, minHeight = 280, editorFont, editorTheme }: Props) {
   const ref = useRef<ReactCodeMirrorRef>(null)
   const { theme: appTheme } = useTheme()
 
@@ -224,15 +225,27 @@ export default function DartEditor({ value, onChange, onSubmit, onHint, minHeigh
   // Stable refs so the keymap closure never goes stale
   const onSubmitRef = useRef(onSubmit)
   const onHintRef = useRef(onHint)
+  const onInlineAskRef = useRef(onInlineAsk)
   useEffect(() => { onSubmitRef.current = onSubmit }, [onSubmit])
   useEffect(() => { onHintRef.current = onHint }, [onHint])
+  useEffect(() => { onInlineAskRef.current = onInlineAsk }, [onInlineAsk])
 
   const stableKeymap = useMemo(() => Prec.highest(keymap.of([
     { key: 'Tab', run: insertFormatterIndent },
     { key: 'Shift-Tab', run: indentLess },
     { key: 'Enter', run: smartEnter },
     { key: 'Mod-Enter', run: () => { onSubmitRef.current?.(); return true } },
-    { key: 'Mod-i', run: () => { onHintRef.current?.(); return true } },
+    { key: 'Mod-i', run: (view) => {
+      const pos = view.state.selection.main.head
+      const coords = view.coordsAtPos(pos)
+      const line = view.state.doc.lineAt(pos)
+      if (coords) {
+        onInlineAskRef.current?.({ x: coords.left, y: coords.bottom }, line.text)
+      } else {
+        onHintRef.current?.()
+      }
+      return true
+    }},
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ])), [])
 
@@ -275,7 +288,7 @@ export default function DartEditor({ value, onChange, onSubmit, onHint, minHeigh
     }
     if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
       e.preventDefault()
-      onHint?.()
+      // handled by keymap with cursor coords
     }
   }, [onSubmit, onHint])
 
