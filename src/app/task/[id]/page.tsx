@@ -148,6 +148,7 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
                     <div style={{
                       fontSize: '0.875rem', lineHeight: 1.65, color: 'var(--text2)',
                       whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: '0.6rem 0',
+                      fontFamily: "'TT Hoves Pro', 'Inter', -apple-system, sans-serif",
                     }}>
                       {children}
                     </div>
@@ -155,7 +156,7 @@ export default function TaskPage({ params }: { params: Promise<{ id: string }> }
                   code: ({ className, children }) =>
                     className
                       ? <code className={className}>{children}</code>
-                      : <span style={{ fontFamily: 'inherit' }}>{children}</span>,
+                      : <>{children}</>,
                 }}
               >{task.description}</ReactMarkdown>
             </div>
